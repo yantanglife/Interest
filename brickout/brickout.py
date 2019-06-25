@@ -61,7 +61,9 @@ class Ball(object):
         if self._yLoc <= self._radius:
             self.__yVel *= -1
         # bottom drop out
-        elif self._yLoc >= self.__width - self._radius:
+        # elif self._yLoc >= self.__height - self._radius:
+        # instead of comparing ball and surface's bottom, it's better to choose paddle.
+        elif self._yLoc - self._radius >= paddle._yLoc:
             return True
 
         # for bouncing off the bricks.
@@ -118,7 +120,8 @@ class Paddle(object):
             x -= self._width / 5
         elif key[pygame.K_RIGHT]:
             x += self._width / 5
-        else:
+        # no key has been pressed. detect the mouse.
+        elif not any(key):
             x, y = pygame.mouse.get_pos()
         if 0 <= x <= (self.__W - self._width):
             self._xLoc = x
@@ -291,12 +294,78 @@ class Button(object):
         else:
             screen.blit(self.imageUp, (x - w / 2, y - h / 2))
 
-if __name__ == "__main__":
-    pygame.display.set_caption("Brickout-game")
-    # The game objects ball, paddle and brick wall
-    # for displaying text in the game
-    pygame.font.init()  # you have to call this at the start,
-    # if you want to use this module.
+
+'''   
+def button (msg, x, y, w, h, ic, ac):
+  mouse =pygame.mouse.get_pos()
+  if x + w > mouse[0] > x and y + h > mouse[1] > y:
+   pygame.draw.rect(gameDisplay, ac, (x,y,w,h))
+  else:
+   pygame.draw.rect(gameDisplay, ic, (x,y,w,h))
+  smallText = pygame.font.Font("freesansbold.ttf", 20)
+  textSurf, textRect = text_objects(msg, smallText)
+  textRect.center = ( (x+(w/2)), (y+(h/2)))
+  gameDisplay.blit(textSurf, textRect)
+'''
+
+
+class Button2(object):
+    def __init__(self, msg, position, w, h, ic, ac):
+        """
+        :param msg:
+        :param position: left and top.
+        :param w:
+        :param h:
+        :param ic: color before press.
+        :param ac:
+        """
+        self.msg = msg
+        self.position = position
+        self.weight = w
+        self.height = h
+        self.ac = ac
+        self.ic = ic
+
+    def is_over(self):
+        point_x, point_y = pygame.mouse.get_pos()
+        x, y = self.position
+        in_x = x < point_x < x + self.weight
+        in_y = y < point_y < y + self.height
+        return in_x and in_y
+
+    def render(self, surface):
+        x, y = self.position
+        if self.is_over():
+            pygame.draw.rect(screen, self.ac, (x, y, self.weight, self.height))
+        else:
+            pygame.draw.rect(screen, self.ic, (x, y, self.weight, self.height))
+        text = pygame.font.Font('freesansbold.ttf', 20)
+        text_surface, text_rect = text_objects(self.msg, text)
+        text_rect.center = (x + self.weight / 2, y + self.height / 2)
+        surface.blit(text_surface, text_rect)
+
+
+def text_objects(text, font):
+    text_surface = font.render(text, True, (0, 0, 0))
+    return text_surface, text_surface.get_rect()
+
+
+def show_welcome(gameStart, gameOver):
+    for event in pygame.event.get():
+        if event.type in (pygame.QUIT, pygame.KEYDOWN):
+            pygame.quit()
+            exit()
+        if event.type == pygame.MOUSEBUTTONUP:
+            if gameStart.is_over():
+                return False
+            elif gameOver.is_over():
+                pygame.quit()
+                exit()
+    #screen.blit(background, (0,0))
+    #screen.blit(logo, ((SCREEN_SIZE[0]-logo.get_width())/2,100))
+    gameStart.render(screen)
+    gameOver.render(screen)
+    return True
 
 
 def main():
@@ -306,16 +375,11 @@ def main():
 
     isGameOver = False  # determines whether game is lose
     gameStatus = True  # game is still running
-
     score = 0  # score for the game.
-
     # Loop until the user clicks the close button.
     done = False
-
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
-
-
 
     # message for game over
     mgGameOver = pygame.font.SysFont('Comic Sans MS', 40)
@@ -395,6 +459,30 @@ def main():
 
         # --- Limit to 60 frames per second
         clock.tick(60)
-
+    return {"done": done, "score": score}
     # Close the window and quit.
-    pygame.quit()
+    # pygame.quit()
+
+
+if __name__ == "__main__":
+    pygame.display.set_caption("Brickout-game")
+    # The game objects ball, paddle and brick wall
+    # for displaying text in the game
+    pygame.font.init()  # you have to call this at the start,
+    # if you want to use this module.
+    screen_size = screen.get_size()
+    screen_center = (screen_size[0] / 2, screen_size[1] / 2)
+    button_size = (120, 60)
+    pos1 = (screen_center[0]- button_size[0] / 2, screen_center[1]- button_size[1] / 2)
+    gameStart = Button2("Start", pos1, button_size[0], button_size[1], (255, 0, 0), (255, 255, 0))
+    gameOver = Button2("Over", (pos1[0], pos1[1] + 80), button_size[0], button_size[1], (255, 0, 0), (255, 255, 0))
+    done = False
+    while not done:
+        while show_welcome(gameStart, gameOver):
+            pygame.display.update()
+        res_dic = main()
+        if res_dic.get("done", False):
+            record = [10, 10, 50]
+            score = res_dic.get("score", 0)
+            # here, display the records.
+
