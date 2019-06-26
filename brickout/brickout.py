@@ -1,5 +1,6 @@
 import pygame
 import random
+import string
 
 # Define Four Colours
 BLACK = (0, 0, 0)
@@ -453,15 +454,63 @@ def main():
                 screen.blit(textsurfaceWin, (0, 0))
                 textsurfaceScore = mgScore.render("score: " + str(score), False, (0, 0, 0))
                 screen.blit(textsurfaceScore, (300, 0))
-
+            # whatever player lose or win, end event loop.
+            done = True
         # --- Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
-
         # --- Limit to 60 frames per second
         clock.tick(60)
     return {"done": done, "score": score}
     # Close the window and quit.
     # pygame.quit()
+
+
+def get_key():
+    while 1:
+        event = pygame.event.poll()
+        if event.type == pygame.KEYDOWN:
+            return event.key
+        else:
+            pass
+
+
+def display_box(screen, message):
+    "Print a message in a box in the middle of the screen"
+    fontobject = pygame.font.Font(None, 18)
+    pygame.draw.rect(screen, (0, 0, 0),
+                   ((screen.get_width() / 2) - 100,
+                    (screen.get_height() / 2) - 10,
+                    200,20), 0)
+    pygame.draw.rect(screen, (255,255,255),
+                   ((screen.get_width() / 2) - 102,
+                    (screen.get_height() / 2) - 12,
+                    204,24), 1)
+    if len(message) != 0:
+        screen.blit(fontobject.render(message, 1, (255,255,255)),
+                ((screen.get_width() / 2) - 100, (screen.get_height() / 2) - 10))
+        # pygame.time.Clock().tick(60)
+    pygame.display.flip()
+
+
+def ask(screen, question):
+    "ask(screen, question) -> answer"
+    pygame.font.init()
+    current_string = []
+    display_box(screen, question + ": " + ''.join(current_string))
+    while 1:
+        inkey = get_key()
+        print(inkey)
+        if inkey == pygame.K_BACKSPACE:
+            current_string = current_string[0:-1]
+        elif inkey == pygame.K_RETURN:
+            break
+        elif inkey == pygame.K_MINUS:
+            current_string.append("_")
+        elif inkey <= 127:
+            current_string.append(chr(inkey))
+        display_box(screen, question + ": " + ''.join(current_string) + '_')
+        display_box(screen, question + ": " + ''.join(current_string))
+    return ''.join(current_string)
 
 
 if __name__ == "__main__":
@@ -470,6 +519,7 @@ if __name__ == "__main__":
     # for displaying text in the game
     pygame.font.init()  # you have to call this at the start,
     # if you want to use this module.
+    screen.fill(WHITE)
     screen_size = screen.get_size()
     screen_center = (screen_size[0] / 2, screen_size[1] / 2)
     button_size = (120, 60)
@@ -482,7 +532,18 @@ if __name__ == "__main__":
             pygame.display.update()
         res_dic = main()
         if res_dic.get("done", False):
-            record = [10, 10, 50]
+            records = [50, 30, 0]
             score = res_dic.get("score", 0)
             # here, display the records.
+            index = 0
+            for record in records:
+                if score < record:
+                    index += 1
+            if index < 3:
+                # should input player's name.
+                name = ask(screen, "Name")
+                if name:
+                    records = records.insert(index, score)
+                screen.fill(WHITE)
+                pygame.display.flip()
 
