@@ -5,7 +5,8 @@ import sys
 
 class Snake:
     def __init__(self):
-        self.head = [10, 10]
+        # start in the screen center.
+        self.head = [int(WIDTH / UNIT_SIZE // 2), int(HEIGHT / UNIT_SIZE // 2)]
         self.body = []
         self.life = True
         self.__new_head = self.head.copy()
@@ -68,24 +69,28 @@ class Snake:
         """
             draw head and body.
         """
-
-        rect_head = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE, UNIT_SIZE - 0.5, UNIT_SIZE - 0.5)
-        pygame.draw.rect(screen, GREY + ALPHA, rect_head, 0)
-        # I want to add two eyes!
+        # rect_head = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE, UNIT_SIZE - 0.5, UNIT_SIZE - 0.5)
+        # pygame.draw.rect(screen, GREY + ALPHA, rect_head, 0)
+        # I want to add two eyes! OR, use FACE and NECK!
+        ball_face = (int((self.head[0] + 0.5) * UNIT_SIZE), int((self.head[1] + 0.5) * UNIT_SIZE))
+        pygame.draw.circle(screen, GREY + ALPHA, ball_face, int(UNIT_SIZE / 2) - 1)
         if self.__direction == 'U':
-            ball_eye1 = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE)
-            ball_eye2 = ((self.head[0] + 1) * UNIT_SIZE, self.head[1] * UNIT_SIZE)
+            rect_neck = (self.head[0] * UNIT_SIZE, int((self.head[1] + 0.5) * UNIT_SIZE),
+                         UNIT_SIZE - 0.5, UNIT_SIZE / 2 - 0.5)
+            # ball_eye1 = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE)
+            # ball_eye2 = ((self.head[0] + 1) * UNIT_SIZE, self.head[1] * UNIT_SIZE)
         elif self.__direction == 'D':
-            ball_eye1 = (self.head[0] * UNIT_SIZE, (self.head[1] + 1) * UNIT_SIZE)
-            ball_eye2 = ((self.head[0] + 1) * UNIT_SIZE, (self.head[1] + 1) * UNIT_SIZE)
+            rect_neck = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE,
+                         UNIT_SIZE - 0.5, UNIT_SIZE / 2 - 0.5)
         elif self.__direction == 'L':
-            ball_eye1 = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE)
-            ball_eye2 = (self.head[0] * UNIT_SIZE, (self.head[1] + 1) * UNIT_SIZE)
+            rect_neck = (int((self.head[0] + 0.5) * UNIT_SIZE), self.head[1] * UNIT_SIZE,
+                         UNIT_SIZE / 2 - 0.5, UNIT_SIZE - 0.5)
         elif self.__direction == 'R':
-            ball_eye1 = ((self.head[0] + 1) * UNIT_SIZE, self.head[1] * UNIT_SIZE)
-            ball_eye2 = ((self.head[0] + 1) * UNIT_SIZE, (self.head[1] + 1) * UNIT_SIZE)
-        pygame.draw.circle(screen, WHITE + ALPHA, ball_eye1, 5)
-        pygame.draw.circle(screen, WHITE + ALPHA, ball_eye2, 5)
+            rect_neck = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE,
+                         UNIT_SIZE / 2 - 0.5, UNIT_SIZE - 0.5)
+        pygame.draw.rect(screen, GREY + ALPHA, rect_neck, 0)
+        # pygame.draw.circle(screen, WHITE + ALPHA, ball_eye1, 5)
+        # pygame.draw.circle(screen, WHITE + ALPHA, ball_eye2, 5)
         for body_node in self.body:
             rect_node = (body_node[0] * UNIT_SIZE, body_node[1] * UNIT_SIZE, UNIT_SIZE - 0.5, UNIT_SIZE - 0.5)
             pygame.draw.rect(screen, GREY + ALPHA, rect_node, 0)
@@ -122,31 +127,40 @@ class Snake:
 
 class Food:
     def __init__(self):
-        self.x = random.randint(0, WIDTH / UNIT_SIZE - 1)
-        self.y = random.randint(0, HEIGHT / UNIT_SIZE - 1)
+        self.__width = WIDTH // UNIT_SIZE
+        self.__height = HEIGHT // UNIT_SIZE
+        self.__units_num = self.__width * self.__height
+        self.__units = set([i * self.__width + j for i in range(self.__width) for j in range(self.__height)])
+        self.__x = random.randint(0, self.__width - 1)
+        self.__y = random.randint(0, self.__height - 1)
 
     def update(self, head, body):
         """
             head is a tuple, body is a list.
         """
-        i = 0
+        units_left_num = self.__units_num - 1 - len(body)
         # new pos should avoid appearing in the Snake.
-        # continue to be done.
-        while i < 100:
+        if units_left_num > 0:
             # judge until meeting the condition.
-            # self.x = random.randint(0, WIDTH / UNIT_SIZE - 1)
-            # self.y = random.randint(0, HEIGHT / UNIT_SIZE - 1)
-            self.x = WIDTH / UNIT_SIZE - 2
-            self.y = 0
-            break
+            units_snake = [head[0] * self.__width + head[1]] + \
+                          [node[0] * self.__width + node[1] for node in body]
+            units_left = list(self.__units ^ set(units_snake))
+            unit_food = random.choice(units_left)
+            self.__x = unit_food // self.__width
+            self.__y = unit_food - self.__x * self.__width
         return self.get_pos()
 
     def get_pos(self):
-        return [self.x, self.y]
+        return [self.__x, self.__y]
 
     def draw(self):
+        # ball or rect?
+        ball = (int((self.__x + 0.5) * UNIT_SIZE), int((self.__y + 0.5) * UNIT_SIZE))
+        pygame.draw.circle(screen, GREEN + ALPHA, ball, int(UNIT_SIZE / 2))
+        '''
         rect = (self.x * UNIT_SIZE, self.y * UNIT_SIZE, UNIT_SIZE, UNIT_SIZE)
         pygame.draw.rect(screen, GREEN + ALPHA, rect, 0)
+        '''
 
 
 class Message:
@@ -154,22 +168,38 @@ class Message:
         self.screen = game_screen
 
     def show_score(self, score):
-        msg_score = pygame.font.SysFont('Comic Sans MS', 20)
-        text_surface_score = msg_score.render(str(score), False, BLACK)
+        msg_font = pygame.font.SysFont('Comic Sans MS', 20)
+        text_surface_score = msg_font.render(str(score), False, BLACK)
         self.screen.blit(text_surface_score, (WIDTH - UNIT_SIZE * 2, 0))
+
+    def show_start(self):
+        msg_font = pygame.font.SysFont('Comic Sans MS', 30)
+        msg_start = ["ENTER", "for start", "BACKSPACE", "for end"]
+        text_surface_start = msg_font.render(msg_start[0], False, YELLOW_GREEN)
+        self.screen.blit(text_surface_start, (WIDTH / 6, HEIGHT / 4))
+        text_surface_start = msg_font.render(msg_start[1], False, BLACK)
+        self.screen.blit(text_surface_start, (WIDTH / 2, HEIGHT / 4 + 30))
+        text_surface_start = msg_font.render(msg_start[2], False, ORANGE3)
+        self.screen.blit(text_surface_start, (WIDTH / 6, HEIGHT / 2))
+        text_surface_start = msg_font.render(msg_start[3], False, BLACK)
+        self.screen.blit(text_surface_start, (WIDTH / 1.8, HEIGHT / 2 + 30))
 
 
 WHITE = [255, 255, 255]
 BLACK = [0, 0, 0]
 GREY = [190, 190, 190]
 GREEN = [0, 255, 0]
+YELLOW_GREEN = [154, 205, 50]
+ORANGE3 = [205, 133, 0]
 ALPHA = [0]
+
 
 def run():
     restart = True
     snake = Snake()
     food = Food()
     message = Message(screen)
+
     while restart:
         running = False
         for event in pygame.event.get():
@@ -181,7 +211,7 @@ def run():
                 elif event.key == pygame.K_BACKSPACE:
                     restart = False
         screen.fill(WHITE)
-
+        message.show_start()
         if not snake.is_alive():
             if not running:
                 # print(snake.head, snake.body)
@@ -190,6 +220,8 @@ def run():
             else:
                 snake.reset()
         pygame.display.flip()
+        speed = 3
+        speed_increment = 0
         while running:
             screen.fill(WHITE)
             # show score.
@@ -208,16 +240,18 @@ def run():
                 else:
                     pass
                 snake.update_head()
+                speed_increment = len(snake.body) // 4
 
             pygame.display.flip()
-            clock.tick(5)
+            clock.tick(speed + speed_increment)
+            # clock.tick_busy_loop(speed)
 
 
 if __name__ == "__main__":
     # UP, DOWN, LEFT, RIGHT = False, False, False, True
     pygame.init()
     clock = pygame.time.Clock()
-    WIDTH, HEIGHT = 300, 300
+    WIDTH, HEIGHT = 300, 240
     UNIT_SIZE = 20
     screen = pygame.display.set_mode([WIDTH, HEIGHT])
     run()
