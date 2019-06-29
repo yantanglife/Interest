@@ -7,10 +7,17 @@ class Snake:
     def __init__(self):
         # start in the screen center.
         self.head = [int(WIDTH / UNIT_SIZE // 2), int(HEIGHT / UNIT_SIZE // 2)]
+        # self.head = [x, y]
         self.body = []
         self.life = True
         self.__new_head = self.head.copy()
         self.__direction = 'R'
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        if not hasattr(Snake, "_instance"):
+            Snake._instance = Snake(*args, **kwargs)
+        return Snake._instance
 
     def update_head(self):
         """
@@ -167,6 +174,12 @@ class Message:
     def __init__(self, game_screen):
         self.screen = game_screen
 
+    # then execute __init__, different from Snake.instance()
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(Message, "_instance"):
+            Message._instance = object.__new__(cls)
+        return Message._instance
+
     def show_score(self, score):
         msg_font = pygame.font.SysFont('Comic Sans MS', 20)
         text_surface_score = msg_font.render(str(score), False, BLACK)
@@ -196,10 +209,9 @@ ALPHA = [0]
 
 def run():
     restart = True
-    snake = Snake()
+    snake = Snake.instance()
     food = Food()
     message = Message(screen)
-
     while restart:
         running = False
         for event in pygame.event.get():
@@ -211,39 +223,56 @@ def run():
                 elif event.key == pygame.K_BACKSPACE:
                     restart = False
         screen.fill(WHITE)
-        message.show_start()
         if not snake.is_alive():
             if not running:
-                # print(snake.head, snake.body)
                 snake.draw()
                 message.show_score(len(snake.body))
             else:
                 snake.reset()
+        # MESSAGE should be draw after SNAKE.
+        message.show_start()
         pygame.display.flip()
-        speed = 3
-        speed_increment = 0
+        fps = 30
+        # min time_delay = 2
+        time_delay = 10
+        time_delay_increment = 0
+        time = 0
         while running:
             screen.fill(WHITE)
-            # show score.
-            message.show_score(len(snake.body))
-            # print(food.get_pos(), snake.head, snake.body)
             snake.draw()
             food.draw()
+            # show score.
+            '''
+                SCORE should be draw after SNAKE and FOOD, otherwise, it will be interrupted.
+                Beside, color ALPHA need to be set.
+                Draw order: SNAKE, FOOD -> MESSAGE(SCORE and START...)
+            '''
+            message.show_score(len(snake.body))
             snake.update_direction()
-            snake.move_head()
-            if not snake.is_alive():
-                # print(1, food.get_pos(), snake.head, snake.body)
-                running = False
-            else:
-                if snake.eat_food(food.get_pos()):
-                    food.update(snake.head, snake.body)
+            # control speed according length of snake.
+            if time >= time_delay + time_delay_increment:
+                time = 0
+                snake.move_head()
+                # print(snake.head, snake._Snake__new_head)
+                if not snake.is_alive():
+                    running = False
                 else:
-                    pass
-                snake.update_head()
-                speed_increment = len(snake.body) // 4
+                    '''
+                    Here may be strange. eat_food() -> use old head to update body.
+                    But updating food should use new head!
+                    '''
+                    if snake.eat_food(food.get_pos()):
+                        snake.update_head()
+                        food.update(snake.head, snake.body)
+                    else:
+                        snake.update_head()
 
+                temp = - len(snake.body) // 4
+                time_delay_increment = temp if temp >= -8 else -8
+            else:
+                time += 1
             pygame.display.flip()
-            clock.tick(speed + speed_increment)
+            clock.tick(fps)
             # clock.tick_busy_loop(speed)
 
 
