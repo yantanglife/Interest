@@ -7,11 +7,13 @@ class Snake:
     def __init__(self):
         # start in the screen center.
         self.head = [int(WIDTH / UNIT_SIZE // 2), int(HEIGHT / UNIT_SIZE // 2)]
-        # self.head = [x, y]
         self.body = []
         self.life = True
         self.__new_head = self.head.copy()
         self.__direction = 'R'
+        # __is_valid_key is designed to avoid head-to-neck collision.
+        # Used in update_head() and update_direction() -> __set_direction().
+        self.__is_valid_key = True
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -23,6 +25,8 @@ class Snake:
         """
             only when __new_head is correct, can we update head.
         """
+        if not self.__is_valid_key:
+            self.__is_valid_key = True
         self.head = self.__new_head.copy()
 
     def reset(self):
@@ -122,14 +126,24 @@ class Snake:
                     pass
 
     def __set_direction(self, direction):
-        if direction == 'L' and self.__direction != 'R':
-            self.__direction = 'L'
-        elif direction == 'R' and self.__direction != 'L':
-            self.__direction = 'R'
-        elif direction == 'U' and self.__direction != 'D':
-            self.__direction = 'U'
-        elif direction == 'D' and self.__direction != 'U':
-            self.__direction = 'D'
+        """
+            Only when __is_valid_key is True, can we update __direction.
+                After update __direction, __is_valid_key become False.
+            And in function update_head(), if __is_valid_key is False, set __is_valid_key True,
+                then we can get new __direction.
+        """
+        if not self.__is_valid_key:
+            pass
+        else:
+            self.__is_valid_key = False
+            if direction == 'L' and self.__direction != 'R':
+                self.__direction = 'L'
+            elif direction == 'R' and self.__direction != 'L':
+                self.__direction = 'R'
+            elif direction == 'U' and self.__direction != 'D':
+                self.__direction = 'U'
+            elif direction == 'D' and self.__direction != 'U':
+                self.__direction = 'D'
 
 
 class Food:
@@ -212,6 +226,7 @@ def run():
     snake = Snake.instance()
     food = Food()
     message = Message(screen)
+    fps = 30
     while restart:
         running = False
         for event in pygame.event.get():
@@ -232,7 +247,7 @@ def run():
         # MESSAGE should be draw after SNAKE.
         message.show_start()
         pygame.display.flip()
-        fps = 30
+        clock.tick(fps)
         # min time_delay = 2
         time_delay = 10
         time_delay_increment = 0
@@ -253,7 +268,7 @@ def run():
             if time >= time_delay + time_delay_increment:
                 time = 0
                 snake.move_head()
-                # print(snake.head, snake._Snake__new_head)
+                # print(snake.head, snake._Snake__new_head, snake.body)
                 if not snake.is_alive():
                     running = False
                 else:
