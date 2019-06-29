@@ -96,9 +96,10 @@ class Snake:
         elif self.__direction == 'L':
             rect_neck = (int((self.head[0] + 0.5) * UNIT_SIZE), self.head[1] * UNIT_SIZE,
                          UNIT_SIZE / 2 - 0.5, UNIT_SIZE - 0.5)
-        elif self.__direction == 'R':
+        else:
             rect_neck = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE,
                          UNIT_SIZE / 2 - 0.5, UNIT_SIZE - 0.5)
+
         pygame.draw.rect(screen, GREY + ALPHA, rect_neck, 0)
         # pygame.draw.circle(screen, WHITE + ALPHA, ball_eye1, 5)
         # pygame.draw.circle(screen, WHITE + ALPHA, ball_eye2, 5)
@@ -294,6 +295,7 @@ def run():
 if __name__ == "__main__":
     # UP, DOWN, LEFT, RIGHT = False, False, False, True
     pygame.init()
+    pygame.display.set_caption("snake-yantanglife")
     clock = pygame.time.Clock()
     WIDTH, HEIGHT = 300, 240
     UNIT_SIZE = 20
