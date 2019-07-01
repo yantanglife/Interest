@@ -11,8 +11,8 @@ class Snake:
         self.life = True
         self.__new_head = self.head.copy()
         self.__direction = 'R'
-        # __is_valid_key is designed to avoid head-to-neck collision.
-        # Used in update_head() and update_direction() -> __set_direction().
+        """ __is_valid_key is designed to avoid head-to-neck collision.
+        Used in update_head() and update_direction() -> __set_direction(). """
         self.__is_valid_key = True
         self.__pause = False
 
@@ -86,7 +86,7 @@ class Snake:
         """
         # rect_head = (self.head[0] * UNIT_SIZE, self.head[1] * UNIT_SIZE, UNIT_SIZE - 0.5, UNIT_SIZE - 0.5)
         # pygame.draw.rect(screen, GREY + ALPHA, rect_head, 0)
-        # I want to add two eyes! OR, use FACE and NECK!
+        ''' I want to add two eyes! OR, use FACE and NECK! '''
         ball_face = (int((self.head[0] + 0.5) * UNIT_SIZE), int((self.head[1] + 0.5) * UNIT_SIZE))
         pygame.draw.circle(screen, GREY + ALPHA, ball_face, int(UNIT_SIZE / 2) - 1)
         if self.__direction == 'U':
@@ -113,7 +113,7 @@ class Snake:
 
     def update_direction(self):
         """
-            according key event, update __direction.
+            according key event, update __direction. Beside, PAUSE or EXIT.
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -129,7 +129,12 @@ class Snake:
                     self.__set_direction(direction='R')
                 elif event.key in [pygame.K_RETURN, pygame.K_KP_ENTER]:
                     self.__pause = not self.__pause
+                    """ If it's going to pause, we must set __is_valid_key False. 
+                    Otherwise head's direction can be changed during pause period. """
+                    self.__is_valid_key = False
                     pass
+                elif event.key == pygame.K_BACKSPACE:
+                    sys.exit()
 
     def __set_direction(self, direction):
         """
@@ -166,9 +171,9 @@ class Food:
             head is a tuple, body is a list.
         """
         units_left_num = self.__units_num - 1 - len(body)
-        # new pos should avoid appearing in the Snake.
+        ''' new pos should avoid appearing in the Snake. '''
         if units_left_num > 0:
-            # judge until meeting the condition.
+            ''' judge until meeting the condition. '''
             units_snake = [head[0] * self.__width + head[1]] + \
                           [node[0] * self.__width + node[1] for node in body]
             units_left = list(self.__units ^ set(units_snake))
