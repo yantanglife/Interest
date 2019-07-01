@@ -14,6 +14,7 @@ class Snake:
         # __is_valid_key is designed to avoid head-to-neck collision.
         # Used in update_head() and update_direction() -> __set_direction().
         self.__is_valid_key = True
+        self.__pause = False
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -31,6 +32,9 @@ class Snake:
 
     def reset(self):
         self.__init__()
+
+    def get_pause_state(self):
+        return self.__pause
 
     def is_alive(self):
         """
@@ -123,7 +127,8 @@ class Snake:
                     self.__set_direction(direction='L')
                 elif event.key == pygame.K_RIGHT:
                     self.__set_direction(direction='R')
-                elif event.key == pygame.K_KP_ENTER:
+                elif event.key in [pygame.K_RETURN, pygame.K_KP_ENTER]:
+                    self.__pause = not self.__pause
                     pass
 
     def __set_direction(self, direction):
@@ -188,6 +193,8 @@ class Food:
 class Message:
     def __init__(self, game_screen):
         self.screen = game_screen
+        self.__twinkle_time = None
+        self.__twinkle_gap = None
 
     # then execute __init__, different from Snake.instance()
     def __new__(cls, *args, **kwargs):
@@ -196,25 +203,63 @@ class Message:
         return Message._instance
 
     def show_score(self, score):
-        msg_font = pygame.font.SysFont('Comic Sans MS', 20)
-        text_surface_score = msg_font.render(str(score), False, BLACK)
-        self.screen.blit(text_surface_score, (WIDTH - UNIT_SIZE * 2, 0))
+        self.__update_score_config(score)
+        self.screen.blit(self._text_surface_score, (WIDTH - UNIT_SIZE * 2, 0))
 
     def show_start(self):
-        msg_font = pygame.font.SysFont('Comic Sans MS', 30)
-        msg_start = ["ENTER", "for start", "BACKSPACE", "for end"]
-        text_surface_start = msg_font.render(msg_start[0], False, YELLOW_GREEN)
-        self.screen.blit(text_surface_start, (WIDTH / 6, HEIGHT / 4))
-        text_surface_start = msg_font.render(msg_start[1], False, BLACK)
-        self.screen.blit(text_surface_start, (WIDTH / 2, HEIGHT / 4 + 30))
-        text_surface_start = msg_font.render(msg_start[2], False, ORANGE3)
-        self.screen.blit(text_surface_start, (WIDTH / 6, HEIGHT / 2))
-        text_surface_start = msg_font.render(msg_start[3], False, BLACK)
-        self.screen.blit(text_surface_start, (WIDTH / 1.8, HEIGHT / 2 + 30))
+        self.__init_start_config()
+        self.screen.blit(self._text_surface_start[0], (WIDTH / 6, HEIGHT / 4))
+        self.screen.blit(self._text_surface_start[1], (WIDTH / 2, HEIGHT / 4 + 30))
+        self.screen.blit(self._text_surface_start[2], (WIDTH / 6, HEIGHT / 2))
+        self.screen.blit(self._text_surface_start[3], (WIDTH / 1.8, HEIGHT / 2 + 30))
+
+    def show_pause(self):
+        self.__init_pause_config()
+        if self.__twinkle_time > 0:
+            self.__twinkle_time -= 1
+            self.screen.blit(self._text_surface_pause, (WIDTH / 3, HEIGHT / 3))
+        else:
+            if (- self.__twinkle_gap) <= self.__twinkle_time <= 0:
+                self.__twinkle_time -= 1
+            else:
+                self.__twinkle_time = self.__twinkle_gap
+
+    def __init_start_config(self):
+        if not hasattr(self, "_msg_start_font"):
+            # why private member fail? and distinguish self from cls.
+            self._msg_start_font = pygame.font.SysFont('Comic Sans MS', 30)
+        if not hasattr(self, "_text_surface_start"):
+            msg_start = ["ENTER", "for start", "BACKSPACE", "for end"]
+            self._text_surface_start = []
+            self._text_surface_start.append(self._msg_start_font.render(msg_start[0], False, YELLOW_GREEN))
+            self._text_surface_start.append(self._msg_start_font.render(msg_start[1], False, BLACK))
+            self._text_surface_start.append(self._msg_start_font.render(msg_start[2], False, ORANGE3))
+            self._text_surface_start.append(self._msg_start_font.render(msg_start[3], False, BLACK))
+
+    def __update_score_config(self, score):
+        if not hasattr(self, "_text_font_score"):
+            print("score first")
+            self._text_font_score = pygame.font.SysFont('Comic Sans MS', 20)
+        if not hasattr(self, "_text_surface_score"):
+            setattr(self, "_text_surface_score", None)
+        self._text_surface_score = self._text_font_score.render(str(score), False, BLACK)
+        # Message._text_surface_score = Message._text_font_score.render(str(score), False, BLACK)
+        # return Message._text_font_score
+
+    def __init_pause_config(self):
+        if not hasattr(self, "_text_surface_pause"):
+            print("first")
+            self.__twinkle_time = 20
+            self.__twinkle_gap = 15
+            msg_font = pygame.font.SysFont('Comic Sans MS', 30)
+            msg_start = ["PAUSE"]
+            self._text_surface_pause = msg_font.render(msg_start[0], False, RED)
+        # return self._text_surface_pause
 
 
 WHITE = [255, 255, 255]
 BLACK = [0, 0, 0]
+RED = [255, 0, 0]
 GREY = [190, 190, 190]
 GREEN = [0, 255, 0]
 YELLOW_GREEN = [154, 205, 50]
@@ -266,27 +311,31 @@ def run():
             message.show_score(len(snake.body))
             snake.update_direction()
             # control speed according length of snake.
-            if time >= time_delay + time_delay_increment:
-                time = 0
-                snake.move_head()
-                # print(snake.head, snake._Snake__new_head, snake.body)
-                if not snake.is_alive():
-                    running = False
-                else:
-                    '''
-                    Here may be strange. eat_food() -> use old head to update body.
-                    But updating food should use new head!
-                    '''
-                    if snake.eat_food(food.get_pos()):
-                        snake.update_head()
-                        food.update(snake.head, snake.body)
-                    else:
-                        snake.update_head()
 
-                temp = - len(snake.body) // 4
-                time_delay_increment = temp if temp >= -8 else -8
+            if not snake.get_pause_state():
+                if time >= time_delay + time_delay_increment:
+                    time = 0
+                    snake.move_head()
+                    # print(snake.head, snake._Snake__new_head, snake.body)
+                    if not snake.is_alive():
+                        running = False
+                    else:
+                        '''
+                        Here may be strange. eat_food() -> use old head to update body.
+                        But updating food pos should use new head!
+                        '''
+                        if snake.eat_food(food.get_pos()):
+                            snake.update_head()
+                            food.update(snake.head, snake.body)
+                        else:
+                            snake.update_head()
+
+                    temp = - len(snake.body) // 4
+                    time_delay_increment = temp if temp >= -8 else -8
+                else:
+                    time += 1
             else:
-                time += 1
+                message.show_pause()
             pygame.display.flip()
             clock.tick(fps)
             # clock.tick_busy_loop(speed)
