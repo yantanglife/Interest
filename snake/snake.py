@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 import sys
 
 
@@ -9,6 +10,8 @@ class Snake:
         self.head = [int(WIDTH / UNIT_SIZE // 2), int(HEIGHT / UNIT_SIZE // 2)]
         self.body = []
         self.life = True
+        self.speed = 0
+        self.__last_press_time = 0.
         self.__new_head = self.head.copy()
         self.__direction = 'R'
         """ __is_valid_key is designed to avoid head-to-neck collision.
@@ -135,6 +138,9 @@ class Snake:
                     pass
                 elif event.key == pygame.K_BACKSPACE:
                     sys.exit()
+        else:
+            if time.time() - self.__last_press_time > 0.355:
+                self.__set_speed(direction=None)
 
     def __set_direction(self, direction):
         """
@@ -148,13 +154,35 @@ class Snake:
         else:
             self.__is_valid_key = False
             if direction == 'L' and self.__direction != 'R':
+                self.__set_speed('L')
                 self.__direction = 'L'
             elif direction == 'R' and self.__direction != 'L':
+                self.__set_speed('R')
                 self.__direction = 'R'
             elif direction == 'U' and self.__direction != 'D':
+                self.__set_speed('U')
                 self.__direction = 'U'
             elif direction == 'D' and self.__direction != 'U':
+                self.__set_speed('D')
                 self.__direction = 'D'
+
+    def __set_speed(self, direction):
+        """
+            If press the same key many times in the short time, the snake will move faster.
+        """
+        ################### problem, judge different key before this?
+        t = time.time()
+        if t - self.__last_press_time > 0.355:
+            self.speed = 0
+            # print("stop", self.speed, t, self.__last_press_time, t - self.__last_press_time)
+        else:
+            # print("speed", self.speed, t, self.__last_press_time, t - self.__last_press_time)
+            if self.__direction == direction:
+                self.speed += 4
+                self.speed = 12 if self.speed > 16 else self.speed
+            else:
+                self.speed = 0
+        self.__last_press_time = time.time()
 
 
 class Food:
@@ -277,7 +305,7 @@ def run():
     snake = Snake.instance()
     food = Food()
     message = Message(screen)
-    fps = 30
+    fps = 60
     while restart:
         running = False
         for event in pygame.event.get():
@@ -300,7 +328,7 @@ def run():
         pygame.display.flip()
         clock.tick(fps)
         # min time_delay = 2
-        time_delay = 10
+        time_delay = 20
         time_delay_increment = 0
         time = 0
         while running:
@@ -318,7 +346,7 @@ def run():
             # control speed according length of snake.
 
             if not snake.get_pause_state():
-                if time >= time_delay + time_delay_increment:
+                if time >= time_delay + time_delay_increment + (- snake.speed):
                     time = 0
                     snake.move_head()
                     # print(snake.head, snake._Snake__new_head, snake.body)
