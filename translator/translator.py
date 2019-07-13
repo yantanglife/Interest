@@ -104,16 +104,20 @@ class Baidu:
         self.data['sign'] = self.__get_sign(gtk, word)
         res = self.session.post(self.url, data=self.data)
         all_data = res.json()
+        print(all_data)
         trans_result = all_data.get("trans_result").get("data")[0].get("result")[0][1]
         double_result = all_data.get("liju_result").get("double")
+        tag_result = all_data.get("liju_result").get("tag")
+        print(tag_result)
         double_example_list = []
-        print(self.data)
+        # print(self.data)
         for tup in json.loads(double_result):
             juzi = self.__get_sentence(tup[0])
             sentence = self.__get_sentence(tup[1])
             double_example_list.append((juzi, sentence))
         return {"trans_result": trans_result,
-                "double_example": double_example_list}
+                "double_example": double_example_list,
+                "tag_result": tag_result}
         # return [res.json()['trans_result']['data'][0]['result'][0][1]]
 
     def __get_token_gtk(self):
@@ -157,50 +161,84 @@ class Application(Frame):
         Frame.__init__(self, master)
         self.pack()
         # self.text = StringVar()
-        self.createWidgets()
+        self.__create_widgets()
         self.baidu_translator = Baidu()
 
-    def createWidgets(self):
-        # frame1
+    def __create_widgets(self):
+        """"""
+        '''frame1 title'''
         self.frame1 = Frame(self)
-        self.title_lable = Label(self.frame1, text="Translate", font=20, width='10')
-        self.title_lable.pack()
+        self.title_label = Label(self.frame1, text="Translate", font=20, width='10')
+        self.title_label.pack()
         self.frame1.pack(side=TOP, expand=YES)
-        # frame2
+        '''frame2 search text and button'''
         self.frame2 = Frame(self)
         self.frame2_left = Frame(self.frame2)
         self.frame2_right = Frame(self.frame2)
-        self.search_text = Entry(self.frame2_left, font=15, width='20')
+        self.search_text = Entry(self.frame2_left, font=50, width='20')
         self.button = Button(self.frame2_right, text='search', font=15, width='10', command=self.translate)
+        '''Press button or ENTER key'''
+        self.search_text.bind('<Return>', self.__enter)
         self.search_text.pack()
         self.button.pack()
         self.frame2_left.pack(side=LEFT)
         self.frame2_right.pack(side=RIGHT)
         self.frame2.pack(side=TOP, expand=YES)
-        # frame3
+        ''''''
         self.frame3 = Frame(self)
-        self.scrolly = Scrollbar(self.frame3)
-        self.search_answer = Text(self.frame3)
-        # combine scorolly with text.
-        self.scrolly.config(command=self.search_answer.yview)
-        self.search_answer.config(yscrollcommand=self.scrolly.set, font=20, width='100')
+        self.trans_answer = Entry(self.frame3, font=50, width='60')
+        self.smart_answer = Entry(self.frame3, font=50, width='60')
+        self.trans_answer.pack(side=TOP)
+        self.smart_answer.pack(side=TOP)
+        self.frame3.pack(side=TOP)
+        '''frame4 answer text area'''
+        self.frame4 = Frame(self)
+        self.y_scrollbar = Scrollbar(self.frame4)
+        self.x_scrollbar = Scrollbar(self.frame4, orient=HORIZONTAL)
+        self.search_answer = Text(self.frame4)
+        # combine scrollbar with text.
+        self.y_scrollbar.config(command=self.search_answer.yview)
+        self.x_scrollbar.config(command=self.search_answer.xview)
+        self.search_answer.config(xscrollcommand=self.x_scrollbar.set, yscrollcommand=self.y_scrollbar.set,
+                                  font=20, width='60', wrap='none')
+        # pack order is important.
+        self.x_scrollbar.pack(side=BOTTOM, fill=X)
+        self.y_scrollbar.pack(side=RIGHT, fill=Y)
         self.search_answer.pack(side=LEFT, fill=BOTH, expand=YES)
-        self.scrolly.pack(side=RIGHT, fill=Y)
+        self.frame4.pack(side=TOP, expand=YES)
+        self.search_text.focus()
 
-        self.frame3.pack(side=TOP, expand=YES)
+    def __enter(self, event):
+        print(event)
+        self.translate()
 
     def translate(self):
+        # self.update()
         info = self.search_text.get()
         res = self.baidu_translator.translate(info)
+        trans_result = res.get("trans_result", None)
         double_example = res.get("double_example", None)
+        tag_result = res.get("tag_result", None)
         # text = ""
+        '''clear'''
+        self.trans_answer.config(state=NORMAL)
+        self.smart_answer.config(state=NORMAL)
         self.search_answer.config(state=NORMAL)
+        self.trans_answer.delete(0, END)
+        self.smart_answer.delete(0, END)
         self.search_answer.delete(1.0, END)
+
+        self.trans_answer.insert(END, trans_result)
+        for word in tag_result:
+            self.smart_answer.insert(END, "{}  ".format(word))
         for idx, example in enumerate(double_example, 1):
             print("{}.\t{}\n\t{}".format(idx, example[0], example[1]))
             # text += "{}.\t{}\n\t{}\n".format(idx, example[0], example[1])
             self.search_answer.insert(END, "{}. {}\n  {}\n".format(idx, example[0], example[1]))
         self.search_answer.config(state=DISABLED)
+        # self.trans_answer.config(state=DISABLED)
+        # self.smart_answer.config(state=DISABLED)
+
         # self.text.set(text)
 
 
