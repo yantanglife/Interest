@@ -138,6 +138,8 @@ class Baidu:
 
     @staticmethod
     def __get_sentence(tup):
+        """Actually, tup contains info of space for punctuation.
+            tup[0] is word or punctuation, and tup[-1] may be the space."""
         sentence = ""
         for i in tup:
             sentence += i[0]
@@ -159,60 +161,65 @@ class Baidu:
 class Application(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.pack()
+        self.pack(fill=BOTH, expand=YES)
         # self.text = StringVar()
         self.__create_widgets()
         self.baidu_translator = Baidu()
 
     def __create_widgets(self):
         """"""
-        '''frame1 title'''
+        '''frame1: title'''
         self.frame1 = Frame(self)
-        self.title_label = Label(self.frame1, text="Translate", font=20, width='10')
+        self.title_label = Label(self.frame1, text="Translate", font=("微软雅黑", 15), width='10')
         self.title_label.pack()
-        self.frame1.pack(side=TOP, expand=YES)
-        '''frame2 search text and button'''
+        self.frame1.pack(side=TOP)
+        '''frame2: search text and button'''
         self.frame2 = Frame(self)
         self.frame2_left = Frame(self.frame2)
         self.frame2_right = Frame(self.frame2)
-        self.search_text = Entry(self.frame2_left, font=50, width='20')
-        self.button = Button(self.frame2_right, text='search', font=15, width='10', command=self.translate)
+        self.search_text = Entry(self.frame2_left, font=("", 13), width='20')
+        self.button = Button(self.frame2_right, text='search', font=("", 15), width='7', command=self.__translate)
         '''Press button or ENTER key'''
         self.search_text.bind('<Return>', self.__enter)
         self.search_text.pack()
         self.button.pack()
         self.frame2_left.pack(side=LEFT)
         self.frame2_right.pack(side=RIGHT)
-        self.frame2.pack(side=TOP, expand=YES)
-        ''''''
+        self.frame2.pack(side=TOP, ipadx=3, pady=2)
+        '''frame3: answer word'''
         self.frame3 = Frame(self)
-        self.trans_answer = Entry(self.frame3, font=50, width='60')
-        self.smart_answer = Entry(self.frame3, font=50, width='60')
-        self.trans_answer.pack(side=TOP)
-        self.smart_answer.pack(side=TOP)
-        self.frame3.pack(side=TOP)
+        self.trans_answer = Entry(self.frame3, font=("", 13), width='30')
+        self.smart_answer = Entry(self.frame3, font=("", 13), width='60')
+        self.trans_answer.pack(side=TOP, pady=3)
+        self.smart_answer.pack(side=TOP, padx=10, fill=X)
+        self.frame3.pack(side=TOP, fill=BOTH, ipady=3)
         '''frame4 answer text area'''
         self.frame4 = Frame(self)
         self.y_scrollbar = Scrollbar(self.frame4)
         self.x_scrollbar = Scrollbar(self.frame4, orient=HORIZONTAL)
         self.search_answer = Text(self.frame4)
-        # combine scrollbar with text.
+        # Combine scrollbar with text.
         self.y_scrollbar.config(command=self.search_answer.yview)
         self.x_scrollbar.config(command=self.search_answer.xview)
+        # If wrap = 'none' in config. text would show in one line.
         self.search_answer.config(xscrollcommand=self.x_scrollbar.set, yscrollcommand=self.y_scrollbar.set,
-                                  font=20, width='60', wrap='none')
-        # pack order is important.
-        self.x_scrollbar.pack(side=BOTTOM, fill=X)
-        self.y_scrollbar.pack(side=RIGHT, fill=Y)
-        self.search_answer.pack(side=LEFT, fill=BOTH, expand=YES)
-        self.frame4.pack(side=TOP, expand=YES)
+                                  font=("", 12), width='60', wrap=NONE)
+        # Pack order is important.
+        self.x_scrollbar.pack(side=BOTTOM, fill=BOTH)
+        self.y_scrollbar.pack(side=RIGHT, fill=BOTH)
+        self.search_answer.pack(fill=BOTH, expand=YES)
+        self.frame4.pack(expand=YES, fill=BOTH, anchor=CENTER)
+        # Init state.
+        self.trans_answer.config(state=DISABLED)
+        self.smart_answer.config(state=DISABLED)
+        self.search_answer.config(state=DISABLED)
         self.search_text.focus()
 
     def __enter(self, event):
         print(event)
-        self.translate()
+        self.__translate()
 
-    def translate(self):
+    def __translate(self):
         # self.update()
         info = self.search_text.get()
         res = self.baidu_translator.translate(info)
@@ -245,7 +252,9 @@ class Application(Frame):
 if __name__ == "__main__":
     # youdao = Youdao()
     app = Application()
-    app.master.title("demo")
+    app.master.title("yantang")
+    # app.master.geometry('800x500')
+    app.master.minsize(width=400, height=300)
     app.mainloop()
     '''
     bd = Baidu()
