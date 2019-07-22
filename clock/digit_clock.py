@@ -4,8 +4,18 @@ from datetime import datetime
 
 class DigitalTube:
     def __init__(self, pos, digit=0):
+        """
+        pos: the start pos of this digit(the begin point of "a" tube).
+        digit : number for showing.
+        """
         self.__digit = digit
         self.__pos = pos
+        '''
+        __changed: if this value is True, it means digit has been changed.
+        _line_len: length of a tube.
+        _pen_size: size of pen. 
+        Obviously, _pen_size and _line_len determine the size of the number.
+        '''
         self.__changed = True
         self._line_len = 30
         self._pen_size = 5
@@ -16,11 +26,25 @@ class DigitalTube:
         self.ttl.hideturtle()
 
     def set_value(self, digit):
+        """
+        Set __digit. and update the value of __changed.
+        """
         if self.__digit != digit:
             self.__changed = True
             self.__digit = digit
 
     def draw(self):
+        """
+        7-segment digital tube like this:
+             ___f___
+            |      |
+            |e     | g
+            |__a___|
+            |      |
+            |d     | b
+            |__c___|
+        We draw it from "a" to "g". And __pos is the start of "a" tube.
+        """
         if self.__changed:
             self.__changed = False
             self.ttl.clear()
@@ -31,13 +55,20 @@ class DigitalTube:
             self.__draw_line(True) if self.__digit in [0, 1, 3, 4, 5, 6, 7, 8, 9] else self.__draw_line(False)
             self.__draw_line(True) if self.__digit in [0, 2, 3, 5, 6, 8, 9] else self.__draw_line(False)
             self.__draw_line(True) if self.__digit in [0, 2, 6, 8] else self.__draw_line(False)
+            # d -> e, go UP.
             self.ttl.left(90)
             self.__draw_line(True) if self.__digit in [0, 4, 5, 6, 8, 9] else self.__draw_line(False)
             self.__draw_line(True) if self.__digit in [0, 2, 3, 5, 6, 7, 8, 9] else self.__draw_line(False)
             self.__draw_line(True) if self.__digit in [0, 1, 2, 3, 4, 7, 8, 9] else self.__draw_line(False)
+            # g end, go RIGHT.
             self.ttl.left(180)
 
     def __draw_line(self, is_draw):
+        """
+        During drawing, moving the pen _line_len forward.
+        After having drawn one tube, We should turn the pen's direction 90 degrees to the right, For the next painting.
+        Besides, to make this more like a digital tube, it should be left a gap between two lines
+        """
         self.__draw_gap()
         # self.ttl.pendown() if is_draw else self.ttl.penup()
         self.ttl.pendown()
@@ -66,7 +97,7 @@ def main():
     d4.set_value(int(now_time[4]))
     d5.set_value(int(now_time[6]))
     d6.set_value(int(now_time[7]))
-    t.screen.tracer(False)
+    # t.screen.tracer(False)
     d1.draw()
     d2.draw()
     d3.draw()
@@ -78,7 +109,7 @@ def main():
     '''Considering the time of calculate and paint, we put time delay 950ms.
         (Unless this value is appropriate on my computer.)
         If we put 1000ms, there will be a two-second jump sometimes;
-        and if the time is less than 900ms, it seems that there will be a brief pause.'''
+        and if the time is less than 950ms, it seems that there will be a brief pause.'''
     t.screen.ontimer(main, 950)
 
 
@@ -133,6 +164,7 @@ if __name__ == "__main__":
 
     d5 = DigitalTube((-25, -90))
     d6 = DigitalTube((5, -90))
+    '''d5d6 are SECOND, we should reduce their size.'''
     d5._pen_size = 4
     d5._line_len = 12
     d6._pen_size = 4
