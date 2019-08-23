@@ -1,5 +1,5 @@
 import re
-from js import bd_js_code, test_code
+from js import bd_js_code
 import json
 import js2py
 import time
