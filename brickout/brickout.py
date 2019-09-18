@@ -122,8 +122,15 @@ class Paddle(object):
         elif key[pygame.K_RIGHT]:
             x += self._width / 5
         # no key has been pressed. detect the mouse.
+        # if mouse move, then get mouse's x pos.
+        x_mouse_move, _ = pygame.mouse.get_rel()
+        if (x_mouse_move != 0):
+            x, _ = pygame.mouse.get_pos()
+        """
         elif not any(key):
+            print(pygame.mouse.get_rel())
             x, y = pygame.mouse.get_pos()
+        """
         if 0 <= x <= (self.__W - self._width):
             self._xLoc = x
         # else paddle could not move.
