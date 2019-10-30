@@ -7,5 +7,23 @@
   _| |_ | | | || |_|  __/| |  |  __/\__ \| |_ 
  |_____||_| |_| \__|\___||_|   \___||___/ \__|
 ```                                             
-[↑ here](http://patorjk.com/software/taag/) 
+[↑ here](http://patorjk.com/software/taag/)    
+[❤](https://emojipedia.org/)    
 # Interest
+
+## brickout
+
+## snake
+
+## CharacterVideo
+
+## splicePicture
+
+## clock
+
+## translator
+
+## chat
+
+## nervousCat
+
