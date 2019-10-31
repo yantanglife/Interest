@@ -13,14 +13,16 @@
 
 ## brickout
 是一个简单的打砖块的游戏. 基于 `pygame` .后来加了一个开始、结束界面.       
-用鼠标后者方向键控制挡板的左右移动.      
+用鼠标或方向键控制挡板的左右移动.     
+
 ![brick](https://github.com/yantanglife/Interest/raw/master/brickout/brickout.PNG)
 
 基于[geekcomputers](https://github.com/geekcomputers/Python/tree/master/brickout-game).
 
 ## snake
 稍稍熟悉一点 `pygame` 后， 完成了贪吃蛇游戏. 相比于打砖块，这个要更加完整一些. 加入了暂停和加速功能.        
-方向键控制贪吃蛇的移动，enter 键暂停游戏，连击方向键会加速移动.     
+方向键控制贪吃蛇的移动，enter 键暂停游戏，连击方向键会加速移动.   
+  
 ![snake](https://github.com/yantanglife/Interest/raw/master/snake/snake.PNG)
 
 ## CharacterVideo
@@ -29,10 +31,12 @@
 
 ## splicePicture
 目标图片    
+
 ![jj](https://github.com/yantanglife/Interest/raw/master/splicePicture/jj.jpg)
 
 ### splice
 splice.py 给定一组图片，按照像素分布将其填充为目标图片.       
+
 ![splice](https://github.com/yantanglife/Interest/raw/master/splicePicture/new.png)
 
 ### splice9
@@ -44,21 +48,25 @@ square.py 将目标图片填充或切割为正方形.
 ### cluster
 cluster.py 将目标图片的 RGB 值聚类，并将类簇的 RGB 平均值填充各类簇，以此得到一张新的图片.
 类个数 k=3.     
+
 ![cluster](https://github.com/yantanglife/Interest/raw/master/splicePicture/k_new.png)
 
 ## clock
 使用 `turtle` ，模拟表盘.
 ### hand_clock
 模拟指针.       
+
 ![hand](https://github.com/yantanglife/Interest/raw/master/clock/hand_clock.PNG)
 
 ### digit_clock
 模拟七段数码管.        
+
 ![digit](https://github.com/yantanglife/Interest/raw/master/clock/digit_clock.PNG)
 
 ## translator
 基于[CharlesPikachu](https://github.com/CharlesPikachu/Tools/tree/master/Translator).     
-后续使用 `tkinter` 加了图形界面，补充了百度翻译的双语示例.       
+后续使用 `tkinter` 加了图形界面，补充了百度翻译的双语示例.     
+  
 ![translate](https://github.com/yantanglife/Interest/raw/master/translator/translate.PNG)
 
 ## chat

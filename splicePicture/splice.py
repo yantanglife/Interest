@@ -52,7 +52,9 @@ def splice(target_pic_path, new_pic_path):
             # new_image.paste()
             new_np_image[i * 32: (i + 1) * 32, j * 32: (j + 1) * 32, :] = pic
     logging.info("new image's shape = {}".format(new_np_image.shape))
+    a, b, _ = new_np_image.shape
     img = Image.fromarray(new_np_image.astype('uint8')).convert('RGB')
+    img = img.resize((int(b/8), int(a/8)), Image.ANTIALIAS)
     img.save(new_pic_path)
     logging.info("splice done.")
 
